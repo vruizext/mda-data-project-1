@@ -1,6 +1,6 @@
 import csv
 import psycopg2
-import time
+from datetime import datetime, timezone
 
 
 def connect():
@@ -8,7 +8,7 @@ def connect():
         return psycopg2.connect(user="postgres",
                                 password="postgres",
                                 host="localhost",
-                                port="5352",
+                                port="5342",
                                 database="iip_db")
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -17,12 +17,14 @@ def connect():
 def insert_influencer (conn, nombre, num_seguidores, pct_comision):
     try:
         sql = """
-            INSERT INTO composiones (nombre, track_id, num_seguidores, pct_comision) 
-            VALUES (%s,%s,%s,%s)
+            INSERT INTO influencers (nombre, num_seguidores, pct_comision) 
+            VALUES (%s,%s,%s) 
+            RETURNING influencer_id
             """
         cursor = conn.cursor()
-        cursor.execute(sql, (nombre, '', num_seguidores, pct_comision))
+        cursor.execute(sql, (nombre, num_seguidores, pct_comision))
         conn.commit()
+        return cursor.fetchone()[0]
     except (Exception, psycopg2.Error) as error:
         print(f"Error al insertar producto ({nombre},{num_seguidores}, {pct_comision})", error)
     finally:
@@ -51,10 +53,12 @@ def insert_composicion(conn, nombre, influencer_id):
         sql = """
             INSERT INTO composiciones (nombre, influencer_id) 
             VALUES (%s,%s)
+            RETURNING composicion_id
         """
         cursor = conn.cursor()
         cursor.execute(sql, (nombre, influencer_id))
         conn.commit()
+        return cursor.fetchone()[0]
     except (Exception, psycopg2.Error) as error:
         print(f"Error al insertar composicion ({nombre}, {influencer_id})", error)
     finally:
@@ -99,10 +103,12 @@ def insert_venta(conn, user_id, total, timestamp):
         sql = """
             INSERT INTO ventas (user_id,total,created_at) 
             VALUES (%s,%s,%s)
+            RETURNING venta_id
         """
         cursor = conn.cursor()
         cursor.execute(sql, (user_id, total, timestamp))
         conn.commit()
+        return cursor.fetchone()[0]
     except (Exception, psycopg2.Error) as error:
         print(f"Error al insertar venta ({user_id}, {total}, {timestamp})", error)
     finally:
@@ -129,11 +135,11 @@ def insert_linea_venta(conn, venta_id, producto_id, unidades, total):
 def insert_comision(conn, influencer_id, venta_id, producto_id, total):
     try:
         sql = """
-            INSERT INTO comisiones (influencer_id,venta_id,producto_id,total,pago_id) 
-            VALUES (%s,%s,%s,%s,%s)
+            INSERT INTO comisiones (influencer_id,venta_id,producto_id,total) 
+            VALUES (%s,%s,%s,%s)
         """
         cursor = conn.cursor()
-        cursor.execute(sql, (influencer_id, venta_id, producto_id, total, 0))
+        cursor.execute(sql, (influencer_id, venta_id, producto_id, total))
         conn.commit()
     except (Exception, psycopg2.Error) as error:
         print(f"Error al insertar comision ({influencer_id}, {venta_id}, {producto_id}, {total})", error)
@@ -151,5 +157,21 @@ def insert_productos(conn, file_path):
 
 if __name__ == '__main__':
     conn = connect()
+    # insertar productos
     insert_productos(conn, 'productos_ikea.csv')
+    # influencer
+    influ_id = insert_influencer(conn, 'Influ 1', 10000, 5)
+    # composicion
+    comp_id = insert_composicion(conn, 'Comp 1', influ_id)
+    prod_id = 1
+    insert_productos_comp(conn, comp_id, prod_id)
+
+    # visita de un usuario
+    user_id = '123456'
+    insert_visita(conn, user_id, comp_id, datetime.now(timezone.utc))
+    # venta
+    venta_id = insert_venta(conn, user_id, 100.0,  datetime.now(timezone.utc))
+    insert_linea_venta(conn, venta_id, prod_id, 1, 100.0)
+    # comision
+    insert_comision(conn, influ_id, venta_id, prod_id, 100.0 * 5 / 100)
     conn.close()
