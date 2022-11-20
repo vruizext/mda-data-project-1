@@ -22,7 +22,7 @@ CREATE TABLE public.comisiones (
     influencer_id bigint NOT NULL,
     venta_id bigint NOT NULL,
     producto_id bigint NOT NULL,
-    pago_id bigint NOT NULL,
+    pagado boolean DEFAULT FALSE NOT NULL,
     total double precision DEFAULT 0.0 NOT NULL
 );
 
@@ -83,7 +83,6 @@ ALTER SEQUENCE public.composicion_id_seq OWNED BY public.composiciones.composici
 CREATE TABLE public.influencers (
     influencer_id bigint NOT NULL,
     nombre character varying NOT NULL,
-    track_id character varying NOT NULL,
     num_seguidores integer DEFAULT 0 NOT NULL,
     pct_comision integer DEFAULT 0 NOT NULL
 );
@@ -389,13 +388,6 @@ ALTER TABLE ONLY public.ventas
 --
 
 CREATE INDEX index_comisiones_on_influencer_id ON public.comisiones USING btree (influencer_id);
-
-
---
--- Name: index_comisiones_on_pago_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_comisiones_on_pago_id ON public.comisiones USING btree (pago_id);
 
 
 --

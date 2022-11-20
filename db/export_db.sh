@@ -1,1 +1,1 @@
- psql -U postgres -d iip_db -f iip_db.sql
+psql -U postgres -d iip_db -f iip_db.sql
