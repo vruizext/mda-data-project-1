@@ -8,7 +8,7 @@ def connect():
         return psycopg2.connect(user="postgres",
                                 password="postgres",
                                 host="localhost",
-                                port="5342",
+                                port="5432",
                                 database="iip_db")
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
