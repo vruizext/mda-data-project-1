@@ -27,31 +27,40 @@ if __name__ == '__main__':
 
         insert_visita(conn, user_id, 0 , datetime.now(timezone.utc))
 
-        # Marcamos el límite de los productos random
+        print(user_id)
 
-        lim = random.randint(1,10)
+        # Aproximadamente el 5% de las visitas se transforman en ventas
 
-        # Seleccionamos productos de forma aleatoria
+        if random.random() >= 0.95:
+            
+            # Marcamos el límite de los productos random
 
-        productos_random = select_random(conn,lim)
+            lim = random.randint(1,10)
 
-        # Hace la suma de los precios de todos los productos seleccionados
+            # Seleccionamos productos de forma aleatoria
 
-        total = 0
+            productos_random = select_random(conn,lim)
 
-        for producto in productos_random:
-            total += round(producto[4],2)
+            # Hace la suma de los precios de todos los productos seleccionados
 
-        # Recogemos el id asignado a la venta en la variable venta_id
+            total = 0
 
-        venta_id = insert_venta(conn, user_id, total, datetime.now(timezone.utc))
+            for producto in productos_random:
+                total += round(producto[4],2)
+
+            # Recogemos el id asignado a la venta en la variable venta_id
+
+            venta_id = insert_venta(conn, user_id, total, datetime.now(timezone.utc))
+            
+            # Inserta tantas lineas de venta como productos que corresponden a una venta
+
+            unidades = 1
+            
+            for producto in productos_random:
+                insert_linea_venta(conn, venta_id, producto[0],unidades,round(producto[4],2))
+            
+            print(venta_id)
         
-        # Inserta tantas lineas de venta como productos que corresponden a una venta
+        time.sleep(0.5)
 
-        unidades = 1
         
-        for producto in productos_random:
-            insert_linea_venta(conn, venta_id, producto[0],unidades,round(producto[4],2))
-    
-        print(venta_id)
-        time.sleep(3)
