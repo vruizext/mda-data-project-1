@@ -1,177 +1,74 @@
-import csv
-import psycopg2
-from datetime import datetime, timezone
+from funciones import *
+import random, time
 
-
-def connect():
-    try:
-        return psycopg2.connect(user="postgres",
-                                password="postgres",
-                                host="localhost",
-                                port="5432",
-                                database="iip_db")
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-
-
-def insert_influencer (conn, nombre, num_seguidores, pct_comision):
-    try:
-        sql = """
-            INSERT INTO influencers (nombre, num_seguidores, pct_comision) 
-            VALUES (%s,%s,%s) 
-            RETURNING influencer_id
-            """
-        cursor = conn.cursor()
-        cursor.execute(sql, (nombre, num_seguidores, pct_comision))
-        conn.commit()
-        return cursor.fetchone()[0]
-    except (Exception, psycopg2.Error) as error:
-        print(f"Error al insertar producto ({nombre},{num_seguidores}, {pct_comision})", error)
-    finally:
-        if cursor:
-            cursor.close()
-
-
-def insert_producto(conn, nombre, descripcion, categoria, precio):
-    try:
-        sql = """
-            INSERT INTO productos (nombre,descripcion,categoria,precio) 
-            VALUES (%s, %s, %s, %s)
-        """
-        cursor = conn.cursor()
-        cursor.execute(sql, (nombre, descripcion, categoria, precio))
-        conn.commit()
-    except (Exception, psycopg2.Error) as error:
-        print(f"Error al insertar producto ({nombre}, {descripcion}, {categoria}, {precio})", error)
-    finally:
-        if cursor:
-            cursor.close()
-
-
-def insert_composicion(conn, nombre, influencer_id):
-    try:
-        sql = """
-            INSERT INTO composiciones (nombre, influencer_id) 
-            VALUES (%s,%s)
-            RETURNING composicion_id
-        """
-        cursor = conn.cursor()
-        cursor.execute(sql, (nombre, influencer_id))
-        conn.commit()
-        return cursor.fetchone()[0]
-    except (Exception, psycopg2.Error) as error:
-        print(f"Error al insertar composicion ({nombre}, {influencer_id})", error)
-    finally:
-        if cursor:
-            cursor.close()
-
-
-def insert_productos_comp(conn, composicion_id, producto_id):
-    try:
-        sql = """ 
-            INSERT INTO productos_comp (composicion_id, producto_id) 
-            VALUES (%s,%s)
-        """
-        cursor = conn.cursor()
-        cursor.execute(sql, (composicion_id, producto_id))
-        conn.commit()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(f"Error al insertar productos composicion ({composicion_id}, {producto_id})", error)
-    finally:
-        if cursor:
-            cursor.close()
-
-
-def insert_visita(conn, user_id, composicion_id, timestamp):
-    try:
-        sql = """
-            INSERT INTO visitas (user_id, composicion_id, created_at)
-            VALUES(%s, %s, %s)
-        """
-        cursor = conn.cursor()
-        cursor.execute(sql, (user_id, composicion_id, timestamp))
-        conn.commit()
-    except (Exception, psycopg2.Error) as error:
-        print(f"Error al insertar visita ({user_id}, {composicion_id}, {timestamp})", error)
-    finally:
-        if cursor:
-            cursor.close()
-
-
-def insert_venta(conn, user_id, total, timestamp):
-    try:
-        sql = """
-            INSERT INTO ventas (user_id,total,created_at) 
-            VALUES (%s,%s,%s)
-            RETURNING venta_id
-        """
-        cursor = conn.cursor()
-        cursor.execute(sql, (user_id, total, timestamp))
-        conn.commit()
-        return cursor.fetchone()[0]
-    except (Exception, psycopg2.Error) as error:
-        print(f"Error al insertar venta ({user_id}, {total}, {timestamp})", error)
-    finally:
-        if cursor:
-            cursor.close()
-
-
-def insert_linea_venta(conn, venta_id, producto_id, unidades, total):
-    try:
-        sql = """
-            INSERT INTO lineas_ventas (venta_id, producto_id, unidades, total) 
-            VALUES (%s,%s,%s,%s)
-        """
-        cursor = conn.cursor()
-        cursor.execute(sql, (venta_id, producto_id, unidades, total))
-        conn.commit()
-    except (Exception, psycopg2.Error) as error:
-        print(f"Error al insertar linea_venta ({venta_id}, {producto_id}, {unidades}, {total})", error)
-    finally:
-        if cursor:
-            cursor.close()
-
-
-def insert_comision(conn, influencer_id, venta_id, producto_id, total):
-    try:
-        sql = """
-            INSERT INTO comisiones (influencer_id,venta_id,producto_id,total) 
-            VALUES (%s,%s,%s,%s)
-        """
-        cursor = conn.cursor()
-        cursor.execute(sql, (influencer_id, venta_id, producto_id, total))
-        conn.commit()
-    except (Exception, psycopg2.Error) as error:
-        print(f"Error al insertar comision ({influencer_id}, {venta_id}, {producto_id}, {total})", error)
-    finally:
-        if cursor:
-            cursor.close()
-
-
-def insert_productos(conn, file_path):
-    with open(file_path) as csv_file:
-        csv_reader = csv.DictReader(csv_file, delimiter=';')
-        for row in csv_reader:
-            insert_producto(conn, row['name'], row['short_description'], row['category'], row['price'])
-
+# Creamos la función para hacer una query aleatoria
 
 if __name__ == '__main__':
     conn = connect()
-    # insertar productos
-    insert_productos(conn, 'productos_ikea.csv')
-    # influencer
-    influ_id = insert_influencer(conn, 'Influ 1', 10000, 5)
-    # composicion
-    comp_id = insert_composicion(conn, 'Comp 1', influ_id)
-    prod_id = 1
-    insert_productos_comp(conn, comp_id, prod_id)
 
-    # visita de un usuario
-    user_id = '123456'
-    insert_visita(conn, user_id, comp_id, datetime.now(timezone.utc))
-    # venta
-    venta_id = insert_venta(conn, user_id, 100.0,  datetime.now(timezone.utc))
-    insert_linea_venta(conn, venta_id, prod_id, 1, 100.0)
-    # comision
-    insert_comision(conn, influ_id, venta_id, prod_id, 100.0 * 5 / 100)
-    conn.close()
+    # Insertar 100 influencers y composiciones si no se han insertado aún
+    lista_composiciones = select_all_composiciones(conn)
+    if lista_composiciones is None or len(lista_composiciones) == 0:
+        lista_composiciones = generar_influencers_composiciones(conn, 100)
+
+    while True:
+        # Asignamos un usuario aleatorio
+        user_id = random.randint(1, 1000000)
+
+        # Insertamos una visita de usuario
+        comp_id = composicionRandom(conn)
+        insert_visita(conn, user_id,  comp_id, datetime.now(timezone.utc))
+
+        print(f"visita user_id:{user_id} comp_id:{comp_id}")
+
+        # Para ventas de muebles online, la conversión a ventas es en el mejor caso de un 3%
+        # Los influencers tienen el poder de convertir mucho más, estimamos que en este caso será sobre un 10%
+        if comp_id > 0:
+            conversion_ratio = 0.1
+        else:
+            conversion_ratio = 0.03
+
+        if random.random() <= conversion_ratio:
+            # Marcamos el límite de los productos random
+            lim = random.randint(1,10)
+
+            # Seleccionamos productos de forma aleatoria
+            productos_random = select_random(conn, lim)
+
+            total = 0
+            # Calculamos el total de la venta
+            lista_productos_venta = []
+            for producto in productos_random:
+                unidades = random.randint(1, 4)
+                precio = round(producto[4], 2)
+                total += round(unidades * producto[4], 2)
+                lista_productos_venta.append({ 'producto_id': producto[0], 'unidades': unidades, 'precio': precio })
+
+            print(f"venta total:{total} comp_id:{comp_id}")
+
+            # Recogemos el id asignado a la venta en la variable venta_id
+            venta_id = insert_venta(conn, user_id, total, datetime.now(timezone.utc))
+
+            # Inserta una linea de venta por cada producto que se ha vendido
+            for producto in lista_productos_venta:
+                insert_linea_venta(conn, venta_id, producto['producto_id'], producto['unidades'], producto['precio'])
+
+            # Si la venta no ha sido generada por un influencer, no generará comisión
+            if comp_id == 0:
+                continue
+
+            composicion = lista_composiciones[comp_id]
+            if composicion is None:
+                print(f"ERROR: composicion no se ha cargado {comp_id}")
+                continue
+
+            # Tenemos que generar comision si se ha comprado alguno de los productos de la composicion
+            for producto_venta in productos_random:
+                if producto_venta[0] in composicion['producto_ids']:
+                    comision_eur = round(composicion['porcentaje'] * producto_venta[4], 2)
+                    print(f"comision venta {venta_id}: {comision_eur}")
+                    insert_comision(conn, composicion['influencer_id'], venta_id, producto_venta[0], comision_eur)
+
+        # time.sleep(0.5)
+
+        
