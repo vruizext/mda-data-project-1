@@ -2,6 +2,11 @@ from faker import Faker
 from main import * 
 import random
 
+from insertar_venta import select_random
+from funcion_nombre_composiciones import *
+
+conn = connect()
+
 def nombrecomposcion():
     faker=Faker()
     text_alt= faker.text()
@@ -13,14 +18,20 @@ def nombrecomposcion():
 
 
 
-conn = connect()
+
 
 
 porcentaje=5
 faker=Faker()
 
+
 for i in range (5):
     nombre=faker.name()
     seguidores=random.randint(10000,1000000)
     influencer_id=insert_influencer(conn, nombre, seguidores,porcentaje)
-    
+    listaproductos=select_random(conn,2)
+    comp_id=insert_composicion(conn, nombrecom, influencer_id )
+    for a in listaproductos:
+       
+        print (insert_productos_comp(conn, comp_id, a[0]))
+
