@@ -194,11 +194,11 @@ def generar_influencers_composiciones(conn, limit=10):
         seguidores = random.randint(10000, 1000000)
         influencer_id = insert_influencer(conn, nombre, seguidores, porcentaje)
         comp_id = insert_composicion(conn, nombrecomposcion(), influencer_id)
-        composicion = {'comp_id': comp_id, 'porcentaje': porcentaje, 'influencer_id': influencer_id, 'producto_ids': []}
+        composicion = {'comp_id': comp_id, 'porcentaje': porcentaje, 'influencer_id': influencer_id, 'productos': {}}
         listaproductos = select_random(conn, random.randint(5, 10))
-        for prod in listaproductos:
-            insert_productos_comp(conn, comp_id, prod[0])
-            composicion['producto_ids'].append(prod[0])
+        for producto in listaproductos:
+            insert_productos_comp(conn, comp_id, producto[0])
+            composicion['productos'][producto[0]] = producto
 
         composiciones['comp_id'] = composicion
 
@@ -248,10 +248,10 @@ def select_all_composiciones(conn):
             return composiciones
 
         for comp in rows:
-            composicion = { 'comp_id': comp[0], 'influencer_id': comp[1], 'porcentaje': comp[2], 'producto_ids': [] }
+            composicion = { 'comp_id': comp[0], 'influencer_id': comp[1], 'porcentaje': comp[2], 'productos': {} }
             productos_comp = select_productos_comp(conn, comp[0])
-            for productos_comp in productos_comp:
-                composicion['producto_ids'].append(productos_comp[2])
+            for producto  in productos_comp:
+                composicion['productos'][producto[0]] = producto
             composiciones[comp[0]] = composicion
 
         return composiciones
@@ -262,8 +262,10 @@ def select_all_composiciones(conn):
 def select_productos_comp(conn, comp_id):
     try:
         sql = '''
-            SELECT * FROM productos_comp
-            WHERE composicion_id = %s
+            SELECT productos.* 
+            FROM productos
+            INNER JOIN productos_comp on productos_comp.producto_id = productos.producto_id
+            WHERE productos_comp.composicion_id = %s
         '''
         cursor = conn.cursor()
         cursor.execute(sql, [comp_id])

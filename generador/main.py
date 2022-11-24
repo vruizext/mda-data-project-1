@@ -30,10 +30,17 @@ if __name__ == '__main__':
 
         if random.random() <= conversion_ratio:
             # Marcamos el límite de los productos random
-            lim = random.randint(1,10)
+            lim = random.randint(1, 10)
 
             # Seleccionamos productos de forma aleatoria
             productos_random = select_random(conn, lim)
+
+            # Los usuarios que lleguen a través de una composición comprarán algunos de los productos recomendados
+            if comp_id > 0:
+                composicion = lista_composiciones[comp_id]
+                lista_temp = productos_random + list(composicion['productos'].values())
+                productos_random = random.sample(lista_temp, lim)
+
 
             total = 0
             # Calculamos el total de la venta
@@ -63,12 +70,13 @@ if __name__ == '__main__':
                 continue
 
             # Tenemos que generar comision si se ha comprado alguno de los productos de la composicion
+            composicion_product_ids = list(composicion['productos'].keys())
             for producto_venta in productos_random:
-                if producto_venta[0] in composicion['producto_ids']:
+                if producto_venta[0] in composicion_product_ids:
                     comision_eur = round(composicion['porcentaje'] * producto_venta[4], 2)
                     print(f"comision venta {venta_id}: {comision_eur}")
                     insert_comision(conn, composicion['influencer_id'], venta_id, producto_venta[0], comision_eur)
 
-        # time.sleep(0.5)
+        time.sleep(0.5)
 
         
