@@ -1,5 +1,7 @@
 from funciones import *
-import random, time
+import random
+import time
+from datetime import datetime, timezone, timedelta
 
 # Creamos la función para hacer una query aleatoria
 
@@ -11,15 +13,17 @@ if __name__ == '__main__':
     if lista_composiciones is None or len(lista_composiciones) == 0:
         lista_composiciones = generar_influencers_composiciones(conn, 100)
 
+    ts = datetime(2022, 10, 1, tzinfo=timezone.utc)
+    delta_visitas = timedelta(minutes=1)
     while True:
         # Asignamos un usuario aleatorio
         user_id = random.randint(1, 1000000)
 
         # Insertamos una visita de usuario
         comp_id = composicionRandom(conn)
-        insert_visita(conn, user_id,  comp_id, datetime.now(timezone.utc))
+        insert_visita(conn, user_id,  comp_id, ts)
 
-        print(f"visita user_id:{user_id} comp_id:{comp_id}")
+        print(f"visita user_id:{user_id} comp_id:{comp_id} time: {ts}")
 
         # Para ventas de muebles online, la conversión a ventas es en el mejor caso de un 3%
         # Los influencers tienen el poder de convertir mucho más, estimamos que en este caso será sobre un 10%
@@ -39,7 +43,7 @@ if __name__ == '__main__':
             if comp_id > 0:
                 composicion = lista_composiciones[comp_id]
                 lista_temp = productos_random + list(composicion['productos'].values())
-                productos_random = random.sample(lista_temp, lim)
+                productos_random = random.sample(lista_temp, min(lim, len(lista_temp)))
 
 
             total = 0
@@ -51,10 +55,11 @@ if __name__ == '__main__':
                 total += round(unidades * producto[4], 2)
                 lista_productos_venta.append({ 'producto_id': producto[0], 'unidades': unidades, 'precio': precio })
 
-            print(f"venta total:{total} comp_id:{comp_id}")
+            venta_ts = ts + timedelta(minutes=random.randint(1, 360))
+            print(f"venta total:{total} comp_id:{comp_id} time: {venta_ts}")
 
             # Recogemos el id asignado a la venta en la variable venta_id
-            venta_id = insert_venta(conn, user_id, total, datetime.now(timezone.utc))
+            venta_id = insert_venta(conn, user_id, total, venta_ts)
 
             # Inserta una linea de venta por cada producto que se ha vendido
             for producto in lista_productos_venta:
@@ -77,6 +82,7 @@ if __name__ == '__main__':
                     print(f"comision venta {venta_id}: {comision_eur}")
                     insert_comision(conn, composicion['influencer_id'], venta_id, producto_venta[0], comision_eur)
 
-        time.sleep(0.5)
+        ts += delta_visitas
+        time.sleep(0.1)
 
         

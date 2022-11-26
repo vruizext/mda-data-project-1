@@ -1,6 +1,5 @@
 import csv
 import psycopg2
-from datetime import datetime, timezone
 from faker import Faker
 import random
 
