@@ -11,6 +11,7 @@ if __name__ == '__main__':
     # Insertar 100 influencers y composiciones si no se han insertado aún
     lista_composiciones = select_all_composiciones(conn)
     if lista_composiciones is None or len(lista_composiciones) == 0:
+        insert_productos(conn, 'productos_ikea.csv')
         lista_composiciones = generar_influencers_composiciones(conn, 100)
 
     ts = datetime(2022, 10, 1, tzinfo=timezone.utc)
@@ -42,8 +43,8 @@ if __name__ == '__main__':
             # Los usuarios que lleguen a través de una composición comprarán algunos de los productos recomendados
             if comp_id > 0:
                 composicion = lista_composiciones[comp_id]
-                lista_temp = productos_random + list(composicion['productos'].values())
-                productos_random = random.sample(lista_temp, min(lim, len(lista_temp)))
+                lista_temp = set(productos_random + list(composicion['productos'].values()))
+                productos_random = set(random.sample(lista_temp, min(lim, len(lista_temp))))
 
 
             total = 0
@@ -76,13 +77,12 @@ if __name__ == '__main__':
 
             # Tenemos que generar comision si se ha comprado alguno de los productos de la composicion
             composicion_product_ids = list(composicion['productos'].keys())
-            for producto_venta in productos_random:
-                if producto_venta[0] in composicion_product_ids:
-                    comision_eur = round(composicion['porcentaje'] * producto_venta[4], 2)
+            for producto_venta in lista_productos_venta:
+                if producto_venta['producto_id'] in composicion_product_ids:
+                    comision_eur = round(composicion['porcentaje'] * producto_venta['precio'] * producto_venta['unidades'] / 100, 2)
                     print(f"comision venta {venta_id}: {comision_eur}")
-                    insert_comision(conn, composicion['influencer_id'], venta_id, producto_venta[0], comision_eur)
+                    insert_comision(conn, composicion['influencer_id'], venta_id, producto_venta['producto_id'], comision_eur)
 
         ts += delta_visitas
-        time.sleep(0.1)
 
         

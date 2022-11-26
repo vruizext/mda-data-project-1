@@ -152,7 +152,7 @@ def insert_productos(conn, file_path):
     with open(file_path) as csv_file:
         csv_reader = csv.DictReader(csv_file, delimiter=';')
         for row in csv_reader:
-            insert_producto(conn, row['name'], row['short_description'], row['category'], row['price'])
+            insert_producto(conn, row['name'], row['short_description'].strip(), row['category'], row['price'])
 
 
 def select_productos_composicion(conn, comp_id):
