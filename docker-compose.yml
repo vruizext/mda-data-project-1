@@ -1,5 +1,16 @@
 version: '3.8'
 services:
+  generador:
+    container_name: generador
+    image: generador:latest
+    depends_on:
+      - pg_server
+    environment:
+      POSTGRES_HOST: 'pg_server'
+      POSTGRES_PORT: '5432'
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-iip_db}
   pg_server:
     container_name: postgres_db
     image: postgres_db:latest
@@ -16,6 +27,8 @@ services:
   pg_admin:
     container_name: pg_admin
     image: dpage/pgadmin4
+    depends_on:
+      - pg_server
     restart: unless-stopped
     ports:
       - "${PGADMIN_PORT:-5050}:80"
