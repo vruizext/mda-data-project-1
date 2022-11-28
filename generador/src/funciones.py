@@ -143,7 +143,7 @@ def select_productos_composicion(conn, comp_id):
     return cursor.fetchall()
 
 
-def select_random(conn, lim):
+def select_productos_random(conn, lim):
     """
     Selectiona productos de forma aleatoria, dando más peso a los productos más baratos
     :param conn:
@@ -153,7 +153,7 @@ def select_random(conn, lim):
 
     sql = '''
     SELECT * FROM productos
-    ORDER BY (random() * precio) DESC 
+    ORDER BY (random() * log(precio / 2))  
     LIMIT %s
     '''
     cursor = conn.cursor()
@@ -181,7 +181,7 @@ def generar_influencers_composiciones(conn, limit=10):
         influencer_id = insert_influencer(conn, nombre, seguidores, porcentaje)
         comp_id = insert_composicion(conn, nombrecomposcion(), influencer_id)
         composicion = {'comp_id': comp_id, 'porcentaje': porcentaje, 'influencer_id': influencer_id, 'productos': {}}
-        listaproductos = select_random(conn, random.randint(5, 10))
+        listaproductos = select_productos_random(conn, random.randint(5, 10))
         for producto in listaproductos:
             insert_productos_comp(conn, comp_id, producto[0])
             composicion['productos'][producto[0]] = producto
@@ -192,9 +192,9 @@ def generar_influencers_composiciones(conn, limit=10):
     return composiciones
 
 
-def select_composiciones_random(conn, limite):
+def select_composicion_random(conn):
     """
-    Selecciona composiciones de forma aleatoria, dando más peso a las composiciones
+    Selecciona una composicioón de forma aleatoria, dando más peso a las composiciones
     de influencers que tienen más seguidores.
     :param conn:
     :param limite:
@@ -204,11 +204,11 @@ def select_composiciones_random(conn, limite):
         sql = '''SELECT composicion_id 
                  FROM composiciones
                  INNER JOIN influencers on influencers.influencer_id = composiciones.influencer_id
-                 ORDER BY (random() * num_seguidores) DESC
-                 LIMIT %s'''
+                 ORDER BY (random() * log(num_seguidores)) DESC
+                 LIMIT 1'''
         cursor = conn.cursor()
-        cursor.execute(sql, (limite,))
-        return cursor.fetchall()
+        cursor.execute(sql)
+        return cursor.fetchall()[0][0]
     except (Exception, psycopg2.Error) as error:
         print(f"Error al seleccionar composiciones ", error)
 
@@ -216,7 +216,7 @@ def select_composiciones_random(conn, limite):
 def composicionRandom (conn):
     probabilidad= random.random()
     if probabilidad <= 0.03:
-        return select_composiciones_random(conn, 1)[0][0]
+        return select_composicion_random(conn)
     else:
         return 0
 
