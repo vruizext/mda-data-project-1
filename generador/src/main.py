@@ -1,8 +1,15 @@
 from funciones import *
 import random
 from datetime import datetime, timezone, timedelta
+from time import sleep
 
 if __name__ == '__main__':
+    # Esperamos hasta que la base de datos esté lista
+    db_ready = False
+    while not db_ready:
+        sleep(5)
+        db_ready = wait_for_db()
+
     # Inicializar random para que genere las mismas secuencias siempre
     random.seed(1)
 

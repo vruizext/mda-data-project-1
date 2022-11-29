@@ -4,7 +4,7 @@ import random
 import psycopg2
 from faker import Faker
 
-# Inicializar faker para que genere la misma secuencia de datos para todos
+# Inicializar faker para que genere siempre los datos en la misma secuencia
 fake = Faker()
 Faker.seed(1)
 
@@ -18,6 +18,18 @@ def connect():
                                 database=f"{os.getenv('POSTGRES_DB', 'iip_db')}")
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
+
+
+def wait_for_db():
+    try:
+        conn = connect()
+        cursor = conn.cursor()
+        sql = "select * from ventas"
+        cursor.execute(sql)
+        res = cursor.fetchall()
+        return True
+    except (Exception, psycopg2.Error):
+        print("Esperando a la base de datos ...")
 
 
 def insert_influencer (conn, nombre, num_seguidores, pct_comision):

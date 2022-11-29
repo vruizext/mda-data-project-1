@@ -1,4 +1,4 @@
 FROM postgres:14-alpine
-COPY scripts tmp
-RUN chmod +x tmp/import_db.sh
-
+COPY entrypoint docker-entrypoint-initdb.d
+COPY scripts usr/local/bin
+RUN chmod +x usr/local/bin/reset_db.sh
