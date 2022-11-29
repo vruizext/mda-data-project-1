@@ -4,6 +4,10 @@ import random
 import psycopg2
 from faker import Faker
 
+# Inicializar faker para que genere la misma secuencia de datos para todos
+fake = Faker()
+Faker.seed(1)
+
 
 def connect():
     try:
@@ -162,8 +166,7 @@ def select_productos_random(conn, lim):
 
 
 def nombrecomposcion():
-    faker=Faker()
-    text_alt= faker.text()
+    text_alt= fake.text()
     separar_text=text_alt.split()
     text_alt= (separar_text[0:3])
     nombrecom=" "
@@ -172,11 +175,10 @@ def nombrecomposcion():
 
 
 def generar_influencers_composiciones(conn, limit=10):
-    faker = Faker()
     porcentaje = 5
     composiciones = {}
     for i in range(limit):
-        nombre = faker.name()
+        nombre = fake.name()
         seguidores = random.randint(10000, 1000000)
         influencer_id = insert_influencer(conn, nombre, seguidores, porcentaje)
         comp_id = insert_composicion(conn, nombrecomposcion(), influencer_id)

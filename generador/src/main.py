@@ -3,6 +3,9 @@ import random
 from datetime import datetime, timezone, timedelta
 
 if __name__ == '__main__':
+    # Inicializar random para que genere las mismas secuencias siempre
+    random.seed(1)
+
     conn = connect()
 
     if conn is None:
@@ -22,7 +25,7 @@ if __name__ == '__main__':
     # El 30 de noviembre dejamos de recoger datos
     end_ts = datetime(2022, 11, 30, tzinfo=timezone.utc)
     # Suponemos que tenemos una visita cada 1 segundo, 86.4k por día
-    delta_visitas = timedelta(seconds=1)
+    delta_visitas = timedelta(seconds=15)
 
     while visita_ts < end_ts:
         visita_ts += delta_visitas
