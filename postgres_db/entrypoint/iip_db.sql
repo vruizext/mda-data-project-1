@@ -208,7 +208,7 @@ ALTER SEQUENCE public.producto_id_seq OWNED BY public.productos.producto_id;
 CREATE TABLE public.visitas (
     visita_id bigint NOT NULL,
     user_id text NOT NULL,
-    composicion_id text NOT NULL,
+    composicion_id bigint NOT NULL,
     created_at timestamp(6) without time zone NOT NULL
 );
 
